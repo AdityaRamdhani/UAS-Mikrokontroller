@@ -1,0 +1,94 @@
+#include <Wire.h>
+#include <Adafruit_LiquidCrystal.h>
+
+Adafruit_LiquidCrystal lcd(0x20);
+
+// Pin definisi
+const int sensorPin = A0;
+const int redPin = 4;
+const int greenPin = 2;
+const int bluePin = 3;
+const int buzzerPin = 5;
+
+// Pesan kondisi Tanaman Mulai Layu
+const char* dryMsgs[] = {
+  "Tanaman Layu",
+  
+};
+
+// Pesan kondisi Tanaman hampir layu/Mulai Butuh Air
+const char* mediumMsgs[] = {
+    "Tanaman Butuh Air",
+ 
+};
+
+// Pesan kondisi Tanah Sehat/Lembab
+const char* wetMsgs[] = {
+  "Tanaman Sehat",
+    };
+
+void setup() {
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
+
+  lcd.begin(16, 2);
+  lcd.setBacklight(HIGH);
+  lcd.print("Smart Plant");
+  delay(1500);
+  lcd.clear();
+
+  randomSeed(analogRead(A1));
+}
+
+void loop() {
+  int moisture = analogRead(sensorPin);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Kelembapan: ");
+  lcd.print(moisture);
+  lcd.print("    ");
+
+  lcd.setCursor(0, 1);
+
+  if (moisture < 150) {
+    setColor(true, false, false);  // LED Merah
+
+    // Alarm tit tit tit
+    for (int i = 0; i < 3; i++) {
+      tone(buzzerPin, 1000);
+      delay(100);
+      noTone(buzzerPin);
+      delay(100);
+    }
+
+    int idx = random(0, sizeof(dryMsgs) / sizeof(dryMsgs[0]));
+    lcd.print(dryMsgs[idx]);
+    delay(800);
+  }
+
+  else if (moisture < 700) {
+    setColor(true, true, false);   // LED Kuning
+    noTone(buzzerPin);
+
+    int idx = random(0, sizeof(mediumMsgs) / sizeof(mediumMsgs[0]));
+    lcd.print(mediumMsgs[idx]);
+    delay(800);
+  }
+
+  else {
+    setColor(false, true, false);  // LED Hijau
+    noTone(buzzerPin);
+
+    int idx = random(0, sizeof(wetMsgs) / sizeof(wetMsgs[0]));
+    lcd.print(wetMsgs[idx]);
+    delay(800);
+  }
+}
+
+void setColor(bool r, bool g, bool b) {
+  digitalWrite(redPin, r ? HIGH : LOW);
+  digitalWrite(greenPin, g ? HIGH : LOW);
+  digitalWrite(bluePin, b ? HIGH : LOW);
+}
